@@ -22,7 +22,6 @@
                         <th>Side</th>
                         <th>Size</th>
                         <th>Margin</th>
-                        <th>Exposure</th>
                         <th>Entry</th>
                         <th>Exit</th>
                         <th>SL/TP</th>
@@ -43,8 +42,10 @@
                 <label class="field-label">Trade Date & Time:</label>
                 <input type="datetime-local" id="tradeTime" required>
 
-                <input type="text" id="posId" placeholder="Position ID" required>
-                <input type="text" id="tradeName" placeholder="Trade Name (e.g. BTC/USD)" required>
+                <div class="row">
+                    <input type="text" id="posId" placeholder="Position ID" required>
+                    <input type="text" id="tradeName" placeholder="Pair (BTC/USD)" required>
+                </div>
                 
                 <div class="row">
                     <select id="position">
@@ -56,42 +57,32 @@
 
                 <div class="row">
                     <input type="text" id="margin" placeholder="Margin">
-                    <input type="text" id="exposure" placeholder="Exposure">
+                    <input type="number" id="entryPrice" placeholder="Entry Price" step="any">
                 </div>
 
-                <div id="closeDetails" style="display: none; border-top: 1px solid #FF5A00; margin-top: 10px; padding-top: 10px;">
+                <div class="row">
+                    <input type="number" id="slPrice" placeholder="SL Price" step="any">
+                    <input type="number" id="tpPrice" placeholder="TP Price" step="any">
+                </div>
+
+                <div id="closeDetails" style="display: none; border-top: 1px solid #FF5A00; margin-top: 15px; padding-top: 15px;">
+                    <h3 style="color: #4ecca3; font-size: 14px; margin-bottom: 10px;">Exit Details</h3>
                     <div class="row">
-                        <input type="number" id="entryPrice" placeholder="Entry Price" step="any">
                         <input type="number" id="exitPrice" placeholder="Exit Price" step="any">
+                        <input type="text" id="netPnl" placeholder="Net P&L ($)">
                     </div>
-                    <div class="row">
-                        <input type="number" id="slPrice" placeholder="SL Price" step="any">
-                        <input type="number" id="tpPrice" placeholder="TP Price" step="any">
-                    </div>
-                    <div class="row">
-                        <input type="text" id="fee" placeholder="Fee (e.g. $5.00)">
-                        <input type="text" id="swap" placeholder="Swap (e.g. $0.50)">
-                    </div>
-                    <div class="row">
-                        <input type="text" id="pnl" placeholder="P&L">
-                        <input type="text" id="netPnl" placeholder="Net P&L">
-                    </div>
-                    <input type="text" id="orderId" placeholder="Order ID">
-                    <label class="field-label">Exit Time:</label>
-                    <input type="datetime-local" id="exitTime">
                 </div>
                 
-                <input type="text" id="pattern" placeholder="Pattern Name">
+                <input type="text" id="pattern" placeholder="Pattern Name" style="margin-top: 10px;">
                 
                 <div class="image-upload-section">
-                    <div id="pasteArea" tabindex="0">Click & <b>Ctrl+V</b> to Paste Screenshot</div>
-                    <input type="file" id="imageFile" accept="image/*" style="margin-top:5px;">
-                    <img id="imgPreview" src="" style="display:none; width: 100%; margin-top: 10px; border-radius: 5px; border: 1px solid #FF5A00;">
+                    <div id="pasteArea" tabindex="0">Click & <b>Ctrl+V</b> to Paste</div>
+                    <img id="imgPreview" src="">
                 </div>
                 
                 <div class="modal-actions">
                     <button type="submit" id="submitBtn">Save Trade</button>
-                    <button type="button" id="closePosBtn" style="display:none;">Close Position</button>
+                    <button type="button" id="closePosBtn">Close Position</button>
                     <button type="button" id="modalDeleteBtn">Delete</button>
                 </div>
             </form>
