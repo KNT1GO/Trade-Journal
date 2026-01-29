@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Trade Scanner</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/tesseract.js@5.0.0/dist/tesseract.min.js"></script>
+    <style>
+        .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: left; }
+        .input-group label { display: block; font-size: 10px; color: #FF5A00; margin-bottom: 5px; font-weight: bold; }
+        .input-group input, .input-group select { 
+            width: 100%; padding: 10px; background: #161616; border: 1px solid #333; 
+            color: white; border-radius: 6px; box-sizing: border-box; 
+        }
+        .input-group input:focus { border-color: #FF5A00; outline: none; }
+        .help-text { color: #888; font-weight: normal; font-size: 9px; margin-left: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Trade Log Scanner</h1>
+        <p>Upload a screenshot row to auto-fill your journal.</p>
+
+        <div id="pasteArea" style="border: 2px dashed #FF5A00; padding: 40px; text-align: center; cursor: pointer; border-radius: 12px; background: #0a0a0a;">
+            Click to Upload Trade Screenshot
+            <input type="file" id="fileInput" style="display:none" accept="image/*">
+        </div>
+
+        <div id="status" style="margin: 20px 0; color: #4ecca3; font-weight: bold;">Status: Ready</div>
+
+        <div id="resultCard" style="display:none; background: #111; padding: 20px; border-radius: 12px; border: 1px solid #333;">
+            <h3 style="color: #FF5A00;">Scanned Data:</h3>
+            <div id="dataList"></div>
+            <button id="saveBtn" style="background: #FF5A00; color: white; border: none; padding: 15px; border-radius: 6px; margin-top: 20px; cursor: pointer; font-weight: bold; width: 100%;">
+                Confirm & Add to Journal
+            </button>
+        </div>
+
+        <br><a href="index.html" style="color: #888; text-decoration: none;">← Back to Journal</a>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const pasteArea = document.getElementById('pasteArea');
+        const status = document.getElementById('status');
+
+        pasteArea.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            status.innerText = "Processing Image...";
+            status.style.color = "#FF5A00";
+
+            try {
+                const worker = await Tesseract.createWorker('eng');
+                const ret = await worker.recognize(file);
+                await worker.terminate();
+                renderEditableForm(ret.data.text);
+            } catch (err) {
+                status.innerText = "Error: " + err.message;
+            }
+        });
+
+        function renderEditableForm(rawText) {
+            status.innerText = "Scan Complete!";
+            status.style.color = "#4ecca3";
+
+            const cleanText = rawText.replace(/[|]/g, " ").trim();
+            const nameMatch = cleanText.match(/[A-Z0-9]+USD/i);
+            const dateTimeMatch = cleanText.match(/\d{4}\/\d{2}\/\d{2}\s\d{2}:\d{2}:\d{2}/);
+            const side = cleanText.toUpperCase().includes("BUY") ? "Long" : "Short";
+            const financials = cleanText.match(/-?\$?\d+\.\d+/g) || [];
+            const idMatches = cleanText.match(/\d{15,}/g) || [];
+
+            document.getElementById('dataList').innerHTML = `
+                <div class="edit-grid">
+                    <div class="input-group"><label>DATE/TIME</label><input type="text" id="edit-date" value="${dateTimeMatch ? dateTimeMatch[0].replace(/\//g, "-") : ""}"></div>
+                    <div class="input-group"><label>POS ID</label><input type="text" id="edit-id" value="${idMatches[idMatches.length - 1] || ""}"></div>
+                    <div class="input-group"><label>NAME</label><input type="text" id="edit-name" value="${nameMatch ? nameMatch[0] : ""}"></div>
+                    <div class="input-group">
+                        <label>SIDE</label>
+                        <select id="edit-side">
+                            <option value="Long" ${side === 'Long' ? 'selected' : ''}>Long</option>
+                            <option value="Short" ${side === 'Short' ? 'selected' : ''}>Short</option>
+                        </select>
+                    </div>
+                    <div class="input-group"><label>SIZE</label><input type="text" id="edit-qty" value="${financials[0] || ""}"></div>
+                    <div class="input-group"><label>ENTRY PRICE</label><input type="text" id="edit-entry" value="${financials[1] || ""}"></div>
+                    <div class="input-group">
+                        <label>EXIT PRICE <span class="help-text">(Leave blank if open)</span></label>
+                        <input type="text" id="edit-exit" value="${financials[2] || ""}">
+                    </div>
+                    <div class="input-group">
+                        <label>NET P&L <span class="help-text">(Leave blank if open)</span></label>
+                        <input type="text" id="edit-pnl" value="${(financials[financials.length - 1] || "").replace('$', '')}">
+                    </div>
+                </div>
+            `;
+            document.getElementById('resultCard').style.display = "block";
+        }
+
+        document.getElementById('saveBtn').onclick = () => {
+            const exitPrice = document.getElementById('edit-exit').value.trim();
+            const pnl = document.getElementById('edit-pnl').value.trim();
+            const isClosed = exitPrice !== "" && exitPrice !== "-";
+
+            const finalTrade = {
+                timestamp: document.getElementById('edit-date').value,
+                posId: document.getElementById('edit-id').value,
+                name: document.getElementById('edit-name').value,
+                pos: document.getElementById('edit-side').value,
+                qty: document.getElementById('edit-qty').value,
+                margin: "-", 
+                entryPrice: document.getElementById('edit-entry').value,
+                slPrice: "", tpPrice: "",
+                exitPrice: isClosed ? exitPrice : "", 
+                netPnl: isClosed ? pnl : "",
+                img: "https://via.placeholder.com/50?text=Scanned"
+            };
+
+            let trades = JSON.parse(localStorage.getItem("trades")) || [];
+            trades.push(finalTrade);
+            localStorage.setItem("trades", JSON.stringify(trades));
+            window.location.href = "index.html";
+        };
+    </script>
+</body>
+</html>
