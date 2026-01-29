@@ -35,3 +35,30 @@ input, select { width: 100%; padding: 12px; margin: 8px 0; background: #161616; 
 #closePosBtn { flex: 1.5; background: #4ecca3; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
 #modalDeleteBtn { flex: 1; background: #333; color: #e94560; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
 .close { position: absolute; right: 20px; top: 15px; cursor: pointer; color: #666; font-size: 28px; }
+/* --- Scanner Page Editable Inputs --- */
+.input-group {
+    margin-bottom: 10px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.input-group input, 
+.input-group select {
+    width: 100%;
+    padding: 10px;
+    background: #161616; /* Matches your modal input color */
+    border: 1px solid #333;
+    color: white;
+    border-radius: 6px;
+    box-sizing: border-box; /* Prevents inputs from overflowing */
+}
+
+.input-group input:focus {
+    border-color: #FF5A00; /* Turns orange when you click to edit */
+    outline: none;
+}
